@@ -1,0 +1,19 @@
+{
+  "stage": "3/10",
+  "fr": "FR.3.3",
+  "batch": "STAGING-OFFLINE-PILOT",
+  "source": {
+    "repository": "dwtdhruvp246/mushavobudget",
+    "commit": "15903a06965a3405f6f41aeda57fab7c8cc8608d"
+  },
+  "suites": [
+    {
+      "id": "staff-session-fixtures",
+      "file": "tests/fr33-production-staff-session.test.cjs"
+    },
+    {
+      "id": "file-cleanup-fixtures",
+      "file": "tests/fr33-production-file-cleanup.test.mjs"
+    }
+  ]
+}
