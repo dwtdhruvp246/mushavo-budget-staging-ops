@@ -7,6 +7,8 @@ on:
       - .github/workflows/staging-pilot.yml
       - pilot/**
   workflow_dispatch:
+  schedule:
+    - cron: '30 0 * * *'
 
 permissions:
   contents: read
@@ -16,6 +18,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
+    outputs:
+      report: ${{ steps.report.outputs.json }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,6 +51,7 @@ jobs:
             "$(command -v node)" pilot/run.mjs app-source pilot-output/report.json
 
       - name: Record run result
+        id: report
         if: always()
         run: |
           if [[ ! -f pilot-output/report.json ]]; then
@@ -58,6 +63,7 @@ jobs:
             cat pilot-output/report.json
             printf '```\n'
           } >> "$GITHUB_STEP_SUMMARY"
+          printf 'json=%s\n' "$(node -p 'JSON.stringify(require("./pilot-output/report.json"))')" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
@@ -66,3 +72,48 @@ jobs:
           path: pilot-output/report.json
           if-no-files-found: error
           retention-days: 30
+
+  record-history:
+    needs: pilot
+    if: ${{ always() && !cancelled() && github.repository == 'dwtdhruvp246/mushavo-budget-staging-ops' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: staging-pilot-history
+      queue: max
+
+    steps:
+      - name: Append the safe run report to pilot history
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PILOT_RESULT: ${{ needs.pilot.result }}
+          PILOT_REPORT: ${{ needs.pilot.outputs.report }}
+        run: |
+          python3 - <<'PY' > "$RUNNER_TEMP/pilot-history-request.json"
+          import base64
+          import json
+          import os
+
+          report = os.environ["PILOT_REPORT"]
+          run = os.environ["GITHUB_RUN_ID"]
+          attempt = os.environ["GITHUB_RUN_ATTEMPT"]
+          entry = {
+              "runId": run,
+              "attempt": int(attempt),
+              "event": os.environ["GITHUB_EVENT_NAME"],
+              "workflowCommit": os.environ["GITHUB_SHA"],
+              "jobResult": os.environ["PILOT_RESULT"],
+              "report": json.loads(report) if report else None,
+          }
+          contents = json.dumps(entry, indent=2) + "\n"
+          print(json.dumps({
+              "message": f"Record offline staging run {run} attempt {attempt}",
+              "content": base64.b64encode(contents.encode()).decode(),
+              "branch": "pilot-history",
+          }))
+          PY
+          gh api --silent --method PUT \
+            "repos/$GITHUB_REPOSITORY/contents/runs/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json" \
+            --input "$RUNNER_TEMP/pilot-history-request.json"
