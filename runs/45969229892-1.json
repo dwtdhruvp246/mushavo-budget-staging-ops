@@ -1,0 +1,54 @@
+{
+  "runId": "45969229892",
+  "attempt": 1,
+  "event": "schedule",
+  "workflowCommit": "5e575a071f4b26af338edb3a27494413a11553f6",
+  "jobResult": "success",
+  "report": {
+    "schemaVersion": 1,
+    "stage": "3/10",
+    "fr": "FR.3.3",
+    "batch": "STAGING-OFFLINE-PILOT",
+    "source": {
+      "repository": "dwtdhruvp246/mushavobudget",
+      "commit": "15903a06965a3405f6f41aeda57fab7c8cc8608d"
+    },
+    "startedAt": "2026-11-27T08:54:25.459Z",
+    "finishedAt": "2026-11-27T08:54:25.713Z",
+    "node": "v22.17.0",
+    "status": "PASS",
+    "exitCode": 0,
+    "suites": [
+      {
+        "id": "staff-session-fixtures",
+        "status": "PASS",
+        "exitCode": 0,
+        "durationMs": 95,
+        "counts": {
+          "tests": 5,
+          "pass": 5,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "reason": null
+      },
+      {
+        "id": "file-cleanup-fixtures",
+        "status": "PASS",
+        "exitCode": 0,
+        "durationMs": 123,
+        "counts": {
+          "tests": 5,
+          "pass": 5,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "reason": null
+      }
+    ]
+  }
+}
